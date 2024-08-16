@@ -137,6 +137,32 @@ class Rental {
     public int getDays() {
         return days;
     }
+
+    public double getTotalCost() {
+        return car.calculatePrice(days);
+    }
+
+    public String generateReceipt() {
+        StringBuilder receipt = new StringBuilder();
+        receipt.append("===== Rental Receipt =====\n");
+        receipt.append("Customer Name: ").append(customer.getName()).append("\n");
+        receipt.append("Customer ID: ").append(customer.getCustomerId()).append("\n");
+        receipt.append("--------------------------\n");
+        receipt.append("Car Details:\n");
+        receipt.append("Car ID: ").append(car.getCarId()).append("\n");
+        receipt.append("Brand: ").append(car.getBrand()).append("\n");
+        receipt.append("Model: ").append(car.getModel()).append("\n");
+        receipt.append("Year: ").append(car.getYear()).append("\n");
+        receipt.append("Color: ").append(car.getColor()).append("\n");
+        receipt.append("Mileage: ").append(car.getMileage()).append(" miles\n");
+        receipt.append("--------------------------\n");
+        receipt.append("Rental Duration: ").append(days).append(" days\n");
+        receipt.append("Base Price per Day: $").append(car.getBasePricePerDay()).append("\n");
+        receipt.append("--------------------------\n");
+        receipt.append("Total Cost: $").append(getTotalCost()).append("\n");
+        receipt.append("==========================\n");
+        return receipt.toString();
+    }
 }
 
 class CarRentalSystem {
@@ -161,7 +187,11 @@ class CarRentalSystem {
     public void rentCar(Car car, Customer customer, int days) {
         if (car.isAvailable()) {
             car.rent();
-            rentals.add(new Rental(car, customer, days));
+            Rental rental = new Rental(car, customer, days);
+            rentals.add(rental);
+            System.out.println("Car rented successfully!");
+            // Generate and print the receipt
+            System.out.println(rental.generateReceipt());
         } else {
             System.out.println("Car is not available for rent.");
         }
@@ -178,6 +208,7 @@ class CarRentalSystem {
         }
         if (rentalToRemove != null) {
             rentals.remove(rentalToRemove);
+            System.out.println("Car returned successfully!");
         } else {
             System.out.println("Car was not rented.");
         }
@@ -255,107 +286,160 @@ class CarRentalSystem {
             scanner.nextLine(); // Consume newline
 
             if (choice == 1) {
-                // Rent a Car functionality (same as before)
-                // ...
+                System.out.print("Enter Customer ID: ");
+                String customerId = scanner.nextLine();
+                Customer customer = null;
+                for (Customer c : customers) {
+                    if (c.getCustomerId().equalsIgnoreCase(customerId)) {
+                        customer = c;
+                        break;
+                    }
+                }
+
+                if (customer != null) {
+                    System.out.print("Enter Car ID: ");
+                    String carId = scanner.nextLine();
+                    Car car = null;
+                    for (Car c : cars) {
+                        if (c.getCarId().equalsIgnoreCase(carId)) {
+                            car = c;
+                            break;
+                        }
+                    }
+
+                    if (car != null) {
+                        System.out.print("Enter rental duration (days): ");
+                        int days = scanner.nextInt();
+                        rentCar(car, customer, days);
+                    } else {
+                        System.out.println("Car ID not found.");
+                    }
+                } else {
+                    System.out.println("Customer ID not found.");
+                }
             } else if (choice == 2) {
-                // Return a Car functionality (same as before)
-                // ...
+                System.out.print("Enter Car ID to return: ");
+                String carId = scanner.nextLine();
+                Car car = null;
+                for (Car c : cars) {
+                    if (c.getCarId().equalsIgnoreCase(carId)) {
+                        car = c;
+                        break;
+                    }
+                }
+
+                if (car != null) {
+                    returnCar(car);
+                } else {
+                    System.out.println("Car ID not found.");
+                }
             } else if (choice == 3) {
-                // Leave Feedback functionality (same as before)
-                // ...
+                System.out.print("Enter Customer ID: ");
+                String customerId = scanner.nextLine();
+                Customer customer = null;
+                for (Customer c : customers) {
+                    if (c.getCustomerId().equalsIgnoreCase(customerId)) {
+                        customer = c;
+                        break;
+                    }
+                }
+
+                if (customer != null) {
+                    System.out.print("Enter Rating (1-5): ");
+                    int rating = scanner.nextInt();
+                    scanner.nextLine(); // Consume newline
+                    System.out.print("Enter Comments: ");
+                    String comments = scanner.nextLine();
+                    collectFeedback(customer, rating, comments);
+                } else {
+                    System.out.println("Customer ID not found.");
+                }
             } else if (choice == 4) {
-                // View Feedback functionality (same as before)
-                // ...
+                System.out.print("Enter Customer ID to view feedback: ");
+                String customerId = scanner.nextLine();
+                Customer customer = null;
+                for (Customer c : customers) {
+                    if (c.getCustomerId().equalsIgnoreCase(customerId)) {
+                        customer = c;
+                        break;
+                    }
+                }
+
+                if (customer != null) {
+                    displayFeedback(customer);
+                } else {
+                    System.out.println("Customer ID not found.");
+                }
             } else if (choice == 5) {
-                // Display Inventory functionality
                 displayInventory();
             } else if (choice == 6) {
-                // Filter Cars by Brand functionality
-                System.out.print("Enter brand to filter: ");
+                System.out.print("Enter Brand to filter by: ");
                 String brand = scanner.nextLine();
                 List<Car> filteredCars = filterByBrand(brand);
-                if (!filteredCars.isEmpty()) {
-                    System.out.println("Filtered Cars by Brand: " + brand);
-                    for (Car car : filteredCars) {
-                        System.out.println("Car ID: " + car.getCarId() + ", Model: " + car.getModel());
-                    }
+                if (filteredCars.isEmpty()) {
+                    System.out.println("No cars found for the specified brand.");
                 } else {
-                    System.out.println("No cars found for brand: " + brand);
+                    for (Car car : filteredCars) {
+                        System.out.println("Car ID: " + car.getCarId());
+                        System.out.println("Brand: " + car.getBrand());
+                        System.out.println("Model: " + car.getModel());
+                        System.out.println("Year: " + car.getYear()); // Display year
+                        System.out.println("Color: " + car.getColor()); // Display color
+                        System.out.println("Base Price per Day: $" + car.getBasePricePerDay());
+                        System.out.println("Mileage: " + car.getMileage() + " miles");
+                        System.out.println("Availability: " + (car.isAvailable() ? "Available" : "Not Available"));
+                        System.out.println("--------------------------------");
+                    }
                 }
             } else if (choice == 7) {
-                // Filter Cars by Model functionality
-                System.out.print("Enter model to filter: ");
+                System.out.print("Enter Model to filter by: ");
                 String model = scanner.nextLine();
                 List<Car> filteredCars = filterByModel(model);
-                if (!filteredCars.isEmpty()) {
-                    System.out.println("Filtered Cars by Model: " + model);
-                    for (Car car : filteredCars) {
-                        System.out.println("Car ID: " + car.getCarId() + ", Brand: " + car.getBrand());
-                    }
+                if (filteredCars.isEmpty()) {
+                    System.out.println("No cars found for the specified model.");
                 } else {
-                    System.out.println("No cars found for model: " + model);
+                    for (Car car : filteredCars) {
+                        System.out.println("Car ID: " + car.getCarId());
+                        System.out.println("Brand: " + car.getBrand());
+                        System.out.println("Model: " + car.getModel());
+                        System.out.println("Year: " + car.getYear()); // Display year
+                        System.out.println("Color: " + car.getColor()); // Display color
+                        System.out.println("Base Price per Day: $" + car.getBasePricePerDay());
+                        System.out.println("Mileage: " + car.getMileage() + " miles");
+                        System.out.println("Availability: " + (car.isAvailable() ? "Available" : "Not Available"));
+                        System.out.println("--------------------------------");
+                    }
                 }
             } else if (choice == 8) {
+                System.out.println("Exiting system...");
                 break;
             } else {
-                System.out.println("Invalid choice. Please enter a valid option.");
+                System.out.println("Invalid choice. Please try again.");
             }
         }
 
-        System.out.println("\nThank you for using the Car Rental System!");
+        scanner.close();
     }
 }
+
 public class Main {
     public static void main(String[] args) {
         // Create a new instance of CarRentalSystem
         CarRentalSystem rentalSystem = new CarRentalSystem();
 
-        // Add 20 cars to the rental system with additional details
+        // Add some cars and customers
         Car car1 = new Car("C001", "Toyota", "Camry", 2020, "Black", 60.0, 15000);
         Car car2 = new Car("C002", "Honda", "Accord", 2019, "Silver", 70.0, 18000);
-        Car car3 = new Car("C003", "Ford", "Mustang", 2021, "Red", 100.0, 12000);
-        Car car4 = new Car("C004", "BMW", "X5", 2022, "White", 120.0, 10000);
-        Car car5 = new Car("C005", "Mercedes-Benz", "C-Class", 2020, "Blue", 80.0, 20000);
-        Car car6 = new Car("C006", "Audi", "A4", 2021, "Gray", 90.0, 16000);
-        Car car7 = new Car("C007", "Volkswagen", "Golf", 2018, "Silver", 50.0, 25000);
-        Car car8 = new Car("C008", "Hyundai", "Elantra", 2019, "Black", 55.0, 18000);
-        Car car9 = new Car("C009", "Kia", "Sorento", 2020, "Red", 70.0, 22000);
-        Car car10 = new Car("C010", "Chevrolet", "Camaro", 2022, "Yellow", 110.0, 14000);
-        Car car11 = new Car("C011", "Subaru", "Outback", 2021, "Green", 85.0, 19000);
-        Car car12 = new Car("C012", "Tesla", "Model S", 2023, "Silver", 200.0, 8000);
-        Car car13 = new Car("C013", "Lexus", "RX", 2020, "White", 95.0, 17000);
-        Car car14 = new Car("C014", "Mazda", "CX-5", 2021, "Blue", 65.0, 21000);
-        Car car15 = new Car("C015", "Jeep", "Wrangler", 2022, "Gray", 110.0, 15000);
-        Car car16 = new Car("C016", "Nissan", "Altima", 2019, "Black", 60.0, 20000);
-        Car car17 = new Car("C017", "Ford", "Explorer", 2020, "Red", 80.0, 18000);
-        Car car18 = new Car("C018", "Chevrolet", "Equinox", 2021, "Silver", 70.0, 22000);
-        Car car19 = new Car("C019", "Toyota", "RAV4", 2018, "Blue", 55.0, 25000);
-        Car car20 = new Car("C020", "Honda", "CR-V", 2019, "White", 65.0, 23000);
-
-        // Add cars to the rental system
         rentalSystem.addCar(car1);
         rentalSystem.addCar(car2);
-        rentalSystem.addCar(car3);
-        rentalSystem.addCar(car4);
-        rentalSystem.addCar(car5);
-        rentalSystem.addCar(car6);
-        rentalSystem.addCar(car7);
-        rentalSystem.addCar(car8);
-        rentalSystem.addCar(car9);
-        rentalSystem.addCar(car10);
-        rentalSystem.addCar(car11);
-        rentalSystem.addCar(car12);
-        rentalSystem.addCar(car13);
-        rentalSystem.addCar(car14);
-        rentalSystem.addCar(car15);
-        rentalSystem.addCar(car16);
-        rentalSystem.addCar(car17);
-        rentalSystem.addCar(car18);
-        rentalSystem.addCar(car19);
-        rentalSystem.addCar(car20);
+
+        Customer customer1 = new Customer("CU001", "John Doe");
+        rentalSystem.addCustomer(customer1);
+
+        // Rent a car and display the receipt
+        rentalSystem.rentCar(car1, customer1, 5);  // Renting car1 to customer1 for 5 days
 
         // Start the car rental system menu
         rentalSystem.menu();
     }
 }
-
